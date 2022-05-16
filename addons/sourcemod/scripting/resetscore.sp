@@ -35,9 +35,6 @@ public void OnPluginStart()
 	
 	LoadTranslations("clientmod/resetscore_cssold.phrases");
 	
-	AddCommandListener(PerformCommand, "say");
-	AddCommandListener(PerformCommand, "say_team");
-	
 	ConVar cvar;
 	cvar = CreateConVar("sm_enable", "1", "1 - Включить, 0 - Отключить плагин. (по умолчанию: 1)", _, true, 0.0, true, 1.0);
 	cvar.AddChangeHook(CVarChanged_Enable);
@@ -80,12 +77,21 @@ public void CVarChanged_Show_Info_Reset(ConVar cvar, const char[] oldValue, cons
 
 public void OnClientPutInServer(int client)
 {
+	/* char name[MAX_NAME_LENGTH];
+	GetClientName(client, name, sizeof(name)); */
+	
 	if (IsFakeClient(client))
 		return;
 	
+	//PrintToServer("nick = %s client = %i IsFakeClient(client) = %i", name, client, IsFakeClient(client));
+	
 	if (g_bJoin_Info)
 	{
+		// PrintToServer("nick = %s client = %i g_bJoin_Info = %i", name, client, g_bJoin_Info);
+		
 		CreateTimer(g_fTime_Join_Info, Timer_Notification_Of_Commands, GetClientUserId(client));
+		
+		// PrintToServer("nick = %s client = %i GetClientUserId(client) = %i", name, client, GetClientUserId(client));
 	}
 }
 
@@ -93,8 +99,14 @@ public Action Timer_Notification_Of_Commands(Handle hTimer, any data)
 {
 	int client = GetClientOfUserId(data);
 	
+	/* char name[MAX_NAME_LENGTH];
+	GetClientName(client, name, sizeof(name));
+	PrintToServer("nick = %s client = %i GetClientOfUserId(data) = %i", name, client, GetClientOfUserId(data)); */
+	
 	if (client && IsClientInGame(client))
 	{
+		// PrintToServer("nick = %s client = %i IsClientInGame(client) = %i", name, client, IsClientInGame(client));
+		
 		// MoreColors. Если команду набрал ClientMod-игрок, он увидит именно это:
 		MC_PrintToChat(client, "%t %t", "prefix_clientmod", "timer_notification_of_commands_clientmod");
 		// Colors. А если команду набрал игрок со старым клиентом, он увидит это:
@@ -103,15 +115,28 @@ public Action Timer_Notification_Of_Commands(Handle hTimer, any data)
 	return Plugin_Stop;
 }
 
-public Action PerformCommand(int client, const char[] szCmd, int iArgs)
+public Action OnClientSayCommand(int client, const char[] command, const char[] args)
 {
 	if (!client)
 	{
 		return Plugin_Continue;
 	}
 	
+	/* char name[MAX_NAME_LENGTH];
+	GetClientName(client, name, sizeof(name)); */
+	
+	// TODO: Сделать квар или файл, для написания желаемых команд.
+	// Сравнивает две строки лексиографически.
+	if (strcmp(args, "!rs") && strcmp(args, "!кы") && strcmp(args, "!resetscore") && strcmp(args, "!куыуесщку"))
+	{
+		// PrintToServer("nick = %s args = %s", name, args);
+		return Plugin_Continue;
+	}
+	
 	if (!g_bEnable)
 	{
+		// PrintToServer("!g_bEnable = %i", !g_bEnable);
+		
 		// MoreColors. Если команду набрал ClientMod-игрок, он увидит именно это:
 		MC_PrintToChat(client, "%t %t", "prefix_clientmod", "plugin_status_clientmod");
 		// Colors. А если команду набрал игрок со старым клиентом, он увидит это:
@@ -119,26 +144,14 @@ public Action PerformCommand(int client, const char[] szCmd, int iArgs)
 		return Plugin_Handled;
 	}
 	
-	static char buffer[MAX_NAME_LENGTH];
-	// Извлекает всю строку аргумента команды одним куском из текущей консольной или серверной команды.
-	GetCmdArgString(buffer, sizeof(buffer));
-	// Удаляет пару кавычек из строки, если она существует.
-	StripQuotes(buffer);
-	// Удаляет пробельные символы из начала и конца строки.
-	TrimString(buffer);
-	
-	// TODO: Сделать квар или файл, для написания желаемых команд.
-	// Сравнивает две строки лексиографически.
-	if (strcmp(buffer, "!rs") && strcmp(buffer, "!кы") && strcmp(buffer, "!resetscore") && strcmp(buffer, "!куыуесщку"))
-	{
-		return Plugin_Continue;
-	}
-	
 	if (g_bShow_Info_Reset)
 	{
+		// PrintToServer("g_bShow_Info_Reset = %i", g_bShow_Info_Reset);
 		
 		if (client && IsClientInGame(client) && !IsFakeClient(client) && GetClientFrags(client) == 0 && GetClientDeaths(client) == 0)
 		{
+			// PrintToServer("nick = %s client = %i IsClientInGame(client) = %i !IsFakeClient(client) = %i GetClientFrags(client) == 0 = %i GetClientDeaths(client) == 0 = %i", name, client, IsClientInGame(client), !IsFakeClient(client), GetClientFrags(client) == 0, GetClientDeaths(client) == 0);
+			
 			// MoreColors. Если команду набрал ClientMod-игрок, он увидит именно это:
 			MC_PrintToChat(client, "%t %t", "prefix_clientmod", "points_already_null_clientmod");
 			// Colors. А если команду набрал игрок со старым клиентом, он увидит это:
@@ -153,8 +166,10 @@ public Action PerformCommand(int client, const char[] szCmd, int iArgs)
 		
 		// Фраги
 		SetEntProp(client, Prop_Data, "m_iFrags", 0);
+		// PrintToServer("nick = %s client = %i SetEntProp(client, Prop_Data, m_iFrags, 0) = %i", name, client, SetEntProp(client, Prop_Data, "m_iFrags", 0));
 		// Смерти
 		SetEntProp(client, Prop_Data, "m_iDeaths", 0);
+		// PrintToServer("nick = %s client = %i SetEntProp(client, Prop_Data, m_iDeaths, 0) = %i", name, client, SetEntProp(client, Prop_Data, "m_iDeaths", 0));
 	}
 	
 	return Plugin_Continue;
