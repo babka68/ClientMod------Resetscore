@@ -1,4 +1,4 @@
-# ClientMod------Resetscore
+# ClientMod------Resetscore 1.0
 Поддерживаемые игры: Source v34 and ClientMod
 
 Описание: 
